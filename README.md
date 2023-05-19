@@ -146,9 +146,9 @@ ConsumerCrash-iOS\ViewControllers\CrashAssistantNewFlow
 
 Inside this folder, there will be several levels of subfolders and files. This documentation gives small description to the files, so it can be identified by its behaviour and responsibility.
 
-- `.\Base`: This folder contains all of the basic ingredients for the `Crash Assistant`
+- .\Base: This folder contains all of the basic ingredients for the `Crash Assistant`
   
-  - `.\BaseInformation`
+  - .\BaseInformation
     
     - `BaseCrashAssistTableView.swift`: this is the basic building block for all the tableView-s in the Crash Assistant
     
@@ -156,29 +156,29 @@ Inside this folder, there will be several levels of subfolders and files. This d
     
     - `CrashAssistModalTableViewProtocol.swift`: all of the initializations which is needed to create a `tableView` in this architecture.
     
-    - `.\Delegate`
+    - .\Delegate
       
       - `BaseCrashAssistTableViewDelegate.swift`: delegate to enable user interaction when needed on a screen.
   
-  - `.\Delegate`
+  - .\Delegate
     
     - `CrashAssistImagePickerDelegate.swift`: image delegate that is used for adding and manipulating images in the crash assistant
-  
-  - `.\InfoCells`: these are the cells that is used for the sections. All of the above cells are `CrashAssistantGeneralCell` and the usage and creation of these cell are discussed in the [Views](#views) .
-    
-    - `CrashAssistImageCell.swift`: that is used for presenting images and using the logic. Using `ImageCollectionStackViewWithTitle`.
-    
-    - `CrashAssistNoteCell.swift`: for presenting and manipulating a titleLabel using `SimpleTitleView`
-    
-    - `CrashAssistTextViewCell.swift`: for presenting and manipulating `textView`. Using `BorderedTextView`
-    
-    - `CrashAssistTitleCell.swift`: presenting the title and a cirlce image, which can be set for a checkmark. `TitleAndDescriptionCheckMarkView`
 
-- `.\GeneralLocalCell`
+- .\InfoCells: these are the cells that is used for the sections. All of the above cells are `CrashAssistantGeneralCell` and the usage and creation of these cell are discussed in the [Views](#views) .
+  
+  - `CrashAssistImageCell.swift`: that is used for presenting images and using the logic. Using `ImageCollectionStackViewWithTitle`.
+  
+  - `CrashAssistNoteCell.swift`: for presenting and manipulating a titleLabel using `SimpleTitleView`
+  
+  - `CrashAssistTextViewCell.swift`: for presenting and manipulating `textView`. Using `BorderedTextView`
+  
+  - `CrashAssistTitleCell.swift`: presenting the title and a cirlce image, which can be set for a checkmark. `TitleAndDescriptionCheckMarkView`
+
+- .\GeneralLocalCell
   
   - `CrashAssistantGeneralCell.swift`: This is a custom view cell used as a parent class for cells in the crash assistant.
   
-  - `.\Protocol`
+  - .\Protocol
     
     - `CrashAssistantGeneralCellProtocol.swift`: This protocol defines the basic functionality of the `CrashAssistantGeneralCell`.
     
@@ -186,15 +186,15 @@ Inside this folder, there will be several levels of subfolders and files. This d
     
     - `CrashAssistantTitleCellProtocol.swift`: This protocol is specific to cells that have an expandable title.
 
-- `.\Model`
+- .\Model
   
-  - `.\Action`
+  - .\Action
     
     - `CrashAssistAction.swift`: This is an action object that contains actions to be sent to another class for execution of corresponding logic.
     
     - `CrashAssistActionEnum.swift`: This file lists the actions available for the `CrashAssistAction` object.
   
-  - `.\Data`
+  - .\Data
     
     - `CrashAssistantInjuryData.swift`: This server data contains information about different types of injuries.
     
@@ -214,29 +214,29 @@ Inside this folder, there will be several levels of subfolders and files. This d
     
     - `CrashAssistFileStorageData.swift`: This data contains information about the filename of uploaded images.
   
-  - `.\SectionCellViewModel`
+  - .\SectionCellViewModel
     
-    - `.\SectionType`
+    - .\SectionType
       
       - `CrashAssistantSectionType.swift`: This enum contains specific section types for a tableView with custom sections.
     
-    - `.\Protocol`
+    - .\Protocol
       
       - `CrashAssistantCellViewModelProtocol.swift`: This protocol defines the view model for handling UI data for cells.
       
       - `CrashAssistantSectionViewModelProtocol.swift`: This protocol defines the view model for handling section information.
     
-    - `.\Implementation`
+    - .\Implementation
       
       - `CrashAssistantCellViewModel.swift`: This view model handles UI information for cells.
       
       - `CrashAssistantSectionViewModel.swift`: This view model handles UI information for tableView sections.
 
-- `.\ViewModel`
+- .\ViewModel
   
   - `CrashAssistCategoryViewModel.swift`: This is the most important view model that manages all the UI and data view models together.
   
-  - `.\Protocol`
+  - .\Protocol
     
     - `CrashAssistantTableViewModelProtocol.swift`: This protocol handles special functionalities of the tableView, such as manipulating images and keeping references to section information. It inherits from the `CrashAssistantViewModelProtocol`.
     
@@ -244,55 +244,79 @@ Inside this folder, there will be several levels of subfolders and files. This d
     
     - `CrashAssistCategoryViewModelProtocol.swift`: This view model protocol is an object composition that contains information about the categories on the Crash Assistant main screen, along with the `CrashAssistantViewModelProtocol`. This protocol provides information for tasks like creating, deleting reports, and cleaning up view model data.
 
-- `.\ViewModelCreator`
+- .\ViewModelCreator
   
   - `CrashAssistantViewModelCreator.swift`: this is the factory for creating the the application's viewModels
 
-- `.\Views`
+- .\Views
   
-  - `.\InjuryInformation`
+  - .\InjuryInformation
     
-    - `.\ViewController`
+    - .\ViewController
       
-      - CrasAssistInjuryViewController.xib
+      - `CrasAssistInjuryViewController.xib`:
       
-      - CrasAssistInjuryViewController.swift
+      - `CrasAssistInjuryViewController.swift`: [Find details at CrasAssistInjuryViewController section](#crashassistantInjuryviewcontroller)
       
-      - InjuryTypeEnum.swift
+      - `InjuryTypeEnum.swift`:
     
-    - `.\ViewModel`
+    - .\ViewModel
       
-      - CrashAssistInjuryViewModel.swift
+      - `CrashAssistInjuryViewModel.swift`:
   
-  - `.\OtherDriverInformation`
+  - .\OtherDriverInformation
+    
+    - .\TableView
+      
+      - `CrashAssistOtherDriverInfoTableView.swift`:
+    
+    - .\ViewModel
+      
+      - `CrashAssistOtherDriverInfoViewModel.swift`:
+  
+  - .\UserInformation
     
     - `.\TableView`
       
-      - CrashAssistOtherDriverInfoTableView.swift
+      - `CrashAssistantUserTableView.swift`:
     
     - `.\ViewModel`
       
-      - CrashAssistOtherDriverInfoViewModel.swift
-  
-  - `.\UserInformation`
-    
-    - `.\TableView`
-    
-    - `.\ViewModel`
+      - `CrashAssistantUserViewModel.swift`:
 
-- `.\ViewControllers`
+- .\ViewControllers
   
-  - `.\CrashAssistCategoryTableView`
+  - `CrashAssistantModalViewController.swift`: [Find details at CrashAssistantModalViewController section](#crashassistantmodalciewcontroller)
   
-  - `.\CrashReport`
+  - `CrashAssistantViewController.swift`: [Find details at CrashAssistantViewController section](#crashassistantviewcontroller)
   
-  - `.\Delegate`
+  - `CrashAssistantViewController.xib`: the xib file for CrashAssistantViewController
   
-  - `.\PDFViewer`
+  - .\CrashAssistCategoryTableView
+    
+    - `CrashAssistCategoryTableView.swift`:
+    
+    - `CrashAssistCategoryCell.swift`:
   
-  - `.\PermissionViewController`
+  - .\CrashReport
+    
+    - `CrashAssistShareReportViewController.swift`
+    
+    - `CrashAssistShareReportViewController.xib`
+    
+    - `CrashReportViewController.swift`
+    
+    - `CrashReportViewController.xib`
+    
+    - .\Data
   
-  - `.\Protocol`
+  - .\Delegate
+  
+  - .\PDFViewer
+  
+  - .\PermissionViewController
+  
+  - .\Protocol
 
 Some of the required `Views` can be found at:
 
