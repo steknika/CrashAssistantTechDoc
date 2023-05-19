@@ -218,33 +218,33 @@ Inside this folder, there will be several levels of subfolders and files. This d
     
     - `.\SectionType`
       
-      - `CrashAssistantSectionType.swift`
+      - `CrashAssistantSectionType.swift`: this is an enum that contains all the specific section types for tableView that uses specific sections
     
     - `.\Protocol`
       
-      - `CrashAssistantCellViewModelProtocol.swift`
+      - `CrashAssistantCellViewModelProtocol.swift`: the viewModel protocol for handling UI data for cells
       
-      - `CrashAssistantSectionViewModelProtocol.swift`
+      - `CrashAssistantSectionViewModelProtocol.swift`: the viewModel protocol for handleing section informations
     
     - `.\Implementation`
       
-      - `CrashAssistantCellViewModel.swift`
+      - `CrashAssistantCellViewModel.swift`: the `viewModel `that handles the UI information for cells
       
-      - `CrashAssistantSectionViewModel.swift`
+      - `CrashAssistantSectionViewModel.swift`: the `viewModel `that handles the UI information for `tableView `sections
 
 - `.\ViewModel`
   
-  - `CrashAssistCategoryViewModel.swift`
+  - `CrashAssistCategoryViewModel.swift`: the top most important viewModel that keeps all the `viewModels` (UI and Data) together 
   
   - `.\Protocol`
     
-    - `CrashAssistantTableViewModelProtocol.swift`
+    - `CrashAssistantTableViewModelProtocol.swift`: protocol that handles the `tableView` special functionalities, like manipulating images and keeping reference on the section informations. It is inheritted from the `CrashAssistantViewModelProtocol`.
     
-    - `CrashAssistantViewModelProtocol.swift`
+    - `CrashAssistantViewModelProtocol.swift`: this is the generic top parent of the viewModels.
     
-    - `CrashAssistCategoryViewModelProtocol.swift`
+    - `CrashAssistCategoryViewModelProtocol.swift`: this viewModel protocol is an object composition, which contains the information, of the categories on the Crash Assistant main screen, and the `CrashAssistantViewModelProtocol`. This protocol lays the information for  example creating, deleting reports and cleaning up viewModel data.
     
-    - `UpdateSectionInfoViewModelProtocol`
+    - `UpdateSectionInfoViewModelProtocol`: this protocol is currently not used.
   
   - `.\ViewModelCreator`
     
