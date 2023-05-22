@@ -610,13 +610,226 @@ private func setupAvailableCheckBoxes() {
 }
 ```
 
-### Views
+## Views
 
+The views used in this documentation, specifically the `NibViews`, follow a design pattern called `Single Responsibility Principle` (SRP). A `NibView` can be added to any other view, but it is not meant to be used independently. In order to achieve this behavior, a `NibView` conforms to the `NibInstantiatable` protocol, which is a type of `UIView`.
 
+Here's the `NibInstantiatable` protocol (*.\Extensions\NibInstantiatable+Extensions.swift*) protocol implementation in Swift:
+
+```swift
+import UIKit
+
+public protocol NibInstantiatable {
+    static func nibName() -> String
+}
+
+public extension NibInstantiatable {
+    static func nibName() -> String {
+        return String(describing: self)
+    }
+}
+
+public extension NibInstantiatable where Self: UIView {
+    static func fromNib() -> Self {
+        let bundle = Bundle(for: self)
+        let nib = bundle.loadNibNamed(nibName(), owner: self, options: nil)
+        return nib!.first as! Self
+    }
+}
+```
+
+```swift
+typealias NibView = UIView & NibInstantiatable
+```
+
+To create custom view using the `NibInstantiateable`, you can inherit from the `NibView` typealias. The purpose of the `nibView` is to dynamically add layouts to the views in your app's business logic. By doing so, it allows for a more generalized approach to maintaining these `nibViews`. The responsibility of the `nibView` is to present data within the view itself. On the other hand, the view class that populates the `nibView` is responsible for handling the data and updating the `nibView` accordingly.
+
+By following this pattern, you can achieve better organization and separation of concerns in your app's view hierarchy.
+
+Example for a NibView:
+
+```swift
+import UIKit
+
+class SimpleTitleView: NibView {
+    
+    @IBOutlet private weak var titleLabel: UILabel!
+    
+    func initView(title: String?, font: UIFont) {
+        titleLabel.font = font
+        titleLabel.text = title
+    }
+    
+    func updateTitle(title: String?) {
+        titleLabel.text = title
+    }
+    
+    func updateFont(font: UIFont) {
+        titleLabel.font = font
+    }
+}
+```
+
+The `SimpleTitleView.swift` file is accompanied by its corresponding `SimpleTitleView.xib` file. This pairing allows us to utilize the `fromNib()` function provided by the `NibInstantiatable` protocol.
+
+The `SimpleTitleView` class provides functionalities to manipulate the user interface (UI) from external sources using various functions. It is important to note that the `SimpleTitleView` class **should not** contain any business logic and **cannot** be updated with module-specific functionalities. Its primary responsibility is to handle UI-related tasks.
+
+In order to use the `NibView` within the app, it requires a parent view. In this case, the parent view is represented by a `CustomViewCell`. The `CustomViewCell` is a typealias for `BaseCustomViewCell` and conforms to the `CustomViewCellHeightProtocol`. While the `CustomViewCellHeightProtocol` solely contains height information for the cell, the `BaseCustomViewCell` provides valuable functionalities.
+
+Here is an example of the `BaseCustomViewCell` class:
+
+```swift
+/// The BaseCustomViewCell class is a base class for custom view cells that are used in a table view.
+/// It extends the UITableViewCell class and conforms to the CustomViewCellProtocol protocol.
+/// The purpose of using this class is to inherit from and use it as a "Xib-less" version of the tableViewCell
+/// Use this class for holding business logic and the loadData to load views and data into them.
+class BaseCustomViewCell: UITableViewCell, CustomViewCellProtocol {
+    private(set) weak var delegate: CustomViewCellDelegate?
+    let uniqueCellIdentifier = UUID().uuidString
+    
+    func initView(delegate: CustomViewCellDelegate) {
+        self.delegate = delegate
+    }
+    
+    /// This method is called to load data into the custom view cell.
+    /// The exact implementation of this method will depend on the specific requirements of the cell,
+    /// but it should typically involve populating the cell's subviews with data from a data source.
+    /// It is also encouraged to use this function to load NibInstantiatable views.
+    func loadData() { }
+}
+```
+
+The `loadData` method, as described in the documentation above, is used to populate the cell's subviews. To illustrate this, let's consider an example:
+
+```swift
+import UIKit
+
+class ExampleCell: CustomViewCell {
+    override func loadData() {
+        super.loadData()
+        if contentView.subviews.count < 1 {
+            let view = SimpleTitleView.fromNib()
+            view.initView(title: infoCellViewModel?.title, font: .ccRegularFont(ofSize: 13))
+            view.pin(to: contentView)
+        }
+    }
+}
+```
+
+When `loadData` is called, and if there are no subviews present, we add our `NibView` to the cell. This step initializes the cell's view. To access this view, you can keep a reference to it, but it is suggested to retrieve it using the following approach:
+
+```swift
+if let view = contentView.subview.first as? SimpleTitleView {
+    // call updates on the view
+}
+```
+
+The purpose of safely accessing the explicit nibView class here is to ensure that each cell can only have one associated NibView. This promotes better code organization and cleanliness. If multiple views are required for a task, it is generally recommended to separate them into different cells. To communicate between these views, delegates and object composition, as discussed in the [Architecture](#architecture) section, can be used.
+
+The `loadData` method can be called when a tableView invokes the `cellForRowAt` data source function.
+
+The `CustomViewCell` can be extended further and used with a combination of other classes or protocols look up in the codebase for `CrashAssistantGeneralCell`.
 
 ### TableViews
 
+The `CrashAssistant` module primarily utilizes tableViews for its views. This choice is based on the versatility offered by `tableViews`. By using `tableViews`, the module benefits from features such as a built-in scrollView, the ability to handle an undefined number of cells (views), efficient loading of cells, and the capability to create sections with section titles. Additionally, tableView sections can be customized with rounded edges to enhance the visual appearance of the `CrashAssistant` modul without manually updating it. 
+
+In the `CrashAssistant` module, each `tableView` is essentially a `UIView` that encapsulates a `tableView` within it. This design choice is consistent with the approach followed throughout the module, aimed at ensuring clean communication between modules and adhering to the `Single Responsibility Principle` (SRP).
+
+By wrapping the `tableView` inside a dedicated `UIView`, it promotes modularity and separation of concerns. The outer `UIView` can handle communication with other modules, manage data sources, and provide necessary interfaces, while the inner `tableView` focuses on displaying and managing the visual representation of the data.
+
+This separation allows for clearer and more maintainable code, facilitates testing, and supports the modular architecture.
+
+A good example would be the CrashAssistantCategoryTableView which is responsible for presenting informations on the landing screen:
+
+```swift
+class CrashAssistCategoryTableView: UIView {
+    
+    private let tableView: UITableView = {
+        let tableView = UITableView(frame: CGRect(x: 0, y: 0, width: 1, height: 1), style: .insetGrouped)
+        tableView.backgroundColor = .ccBackgroundColor
+        tableView.separatorInset = .zero
+        return tableView
+    }()
+
+    (...)
+    
+    required init(delegate: CrashAssistCategoryTableViewDelegate, viewModel: CrashAssistCategoryViewModelProtocol? = nil) {
+        (...)
+        super.init(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
+        self.createCells()
+        self.initTableView()
+        self.tableView.reloadData()
+        self.tableView.pin(to: self)
+    }
+    
+    (...)
+}
+```
+
+Another example of modular design in the CrashAssistant module is the `BaseCrashAssistTableView`. This class serves as the foundation for the `CrashAssistModalTableView`, which is a typealias combining `BaseCrashAssistTableView` and `CrashAssistModalTableViewProtocol`.
+
+The `CrashAssistModalTableView` is utilized within the `CrashAssistantModalViewController` to present a tableView that can vary based on the specific viewModel. It provides a flexible approach to displaying different types of tableViews depending on the context or requirements of the view controller.
+
+Two classes that currently make use of the `CrashAssistModalTableView` are the `CrashAssistOtherDriverInfoTableView` and the `CrashAssistantUserTableView`. These classes leverage the modular and customizable nature of the `CrashAssistModalTableView` to present and handle specific data related to other driver information and user details respectively.
+
+This modular approach allows for reusability, maintainability, and separation of concerns, enabling each class to focus on its specific responsibilities within the CrashAssistant module.
+
 ### ViewModels
+
+The `ViewModels` play a crucial role in the `CrashAssistant` module as they serve as the fundamental building blocks. There are several different `ViewModels` that exist within the module, which can sometimes make it challenging to determine the appropriate `ViewModel` due to the stacked `ViewModel` logic. To address this, it's important to understand that the `ViewModel` is created and passed into the module when the entire `CrashAssistant` is initialized within the `CrashAssistanceMainMenuViewController`.
+
+Here's an example of how the ViewModel is created and used within the `CrashAssistanceMainMenuViewController`:
+
+```swift
+func openCrashAssistantHomeScreen(showCheckList: Bool) {
+    let crashAssistantViewController = CrashAssistantViewController(
+        viewModel: CrashAssistantViewModelCreator().getViewModel(),
+        (...) )
+    (...)
+}
+```
+
+To handle the creation and configuration of all the ViewModels, the `CrashAssistantViewModelCreator.swift` file is responsible. This file can be found at the following location within the project's directory:
+
+```swift
+.\ViewControllers\CrashAssistantNewFlow\Model\ViewModel\ViewModelCreator
+```
+
+Within this file, the necessary `ViewModels` are created and their values are set according to the specific requirements of the `CrashAssistant` module. This centralized approach to `ViewModel` creation helps manage the complexity of the module and ensures proper initialization and configuration of the `ViewModels`.
+
+All of the viewModels are used as protocol inside the classes because we try to relay on interfaces instead of implementations using LSP. By this way  that objects of a superclass can be replaced with objects of its subclasses without breaking the application, so it good to keep this in mind.
+
+The ViewModel structure needs to have a top level protocol that helds together all other parts. But only for one level. The ViewModel we looking for is the `CrashAssistCategoryViewModel`. That is the entry for all the viewModels. In the crashAssistantViewModelCreator, the getViewModel looks like this:
+
+```swift
+public class CrashAssistantViewModelCreator {
+    func getViewModel() -> CrashAssistCategoryViewModel {
+        
+        let injuryViewModel = getInjuryViewModel()
+        let otherDriverViewModel = getOtherDriverViewModel()
+        let userViewModel = getUserViewModel()
+        
+        return CrashAssistCategoryViewModel(viewModels: [
+            injuryViewModel,
+            otherDriverViewModel,
+            userViewModel
+        ])
+    }
+}
+```
+
+The categories protocol hierarchy is the follows:
+
+```swift
+CrashAssistInjuryViewModel -> CrashAssistantViewModelProtocol
+CrashAssistOtherDriverInfoViewModel -> CrashAssistantTableViewModelProtocol -> CrashAssistantViewModelProtocol  
+CrashAssistantUserViewModel -> CrashAssistantTableViewModelProtocol -> CrashAssistantViewModelProtocol
+```
+
+Which means that the `CrashAssistCategoryViewModel` has an array of `CrashAssistantViewModelProtocol`, because that is most low level of the view Model protocols. 
+
+There are viewModels which serves different purposes. 
 
 ### Datas
 
