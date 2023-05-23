@@ -652,18 +652,18 @@ Example for a NibView:
 import UIKit
 
 class SimpleTitleView: NibView {
-    
+
     @IBOutlet private weak var titleLabel: UILabel!
-    
+
     func initView(title: String?, font: UIFont) {
         titleLabel.font = font
         titleLabel.text = title
     }
-    
+
     func updateTitle(title: String?) {
         titleLabel.text = title
     }
-    
+
     func updateFont(font: UIFont) {
         titleLabel.font = font
     }
@@ -686,11 +686,11 @@ Here is an example of the `BaseCustomViewCell` class:
 class BaseCustomViewCell: UITableViewCell, CustomViewCellProtocol {
     private(set) weak var delegate: CustomViewCellDelegate?
     let uniqueCellIdentifier = UUID().uuidString
-    
+
     func initView(delegate: CustomViewCellDelegate) {
         self.delegate = delegate
     }
-    
+
     /// This method is called to load data into the custom view cell.
     /// The exact implementation of this method will depend on the specific requirements of the cell,
     /// but it should typically involve populating the cell's subviews with data from a data source.
@@ -744,7 +744,7 @@ A good example would be the CrashAssistantCategoryTableView which is responsible
 
 ```swift
 class CrashAssistCategoryTableView: UIView {
-    
+
     private let tableView: UITableView = {
         let tableView = UITableView(frame: CGRect(x: 0, y: 0, width: 1, height: 1), style: .insetGrouped)
         tableView.backgroundColor = .ccBackgroundColor
@@ -753,7 +753,7 @@ class CrashAssistCategoryTableView: UIView {
     }()
 
     (...)
-    
+
     required init(delegate: CrashAssistCategoryTableViewDelegate, viewModel: CrashAssistCategoryViewModelProtocol? = nil) {
         (...)
         super.init(frame: CGRect(x: 0, y: 0, width: 1, height: 1))
@@ -762,7 +762,7 @@ class CrashAssistCategoryTableView: UIView {
         self.tableView.reloadData()
         self.tableView.pin(to: self)
     }
-    
+
     (...)
 }
 ```
@@ -798,18 +798,18 @@ To handle the creation and configuration of all the ViewModels, the `CrashAssist
 
 Within this file, the necessary `ViewModels` are created and their values are set according to the specific requirements of the `CrashAssistant` module. This centralized approach to `ViewModel` creation helps manage the complexity of the module and ensures proper initialization and configuration of the `ViewModels`.
 
-All of the viewModels are used as protocol inside the classes because we try to relay on interfaces instead of implementations using LSP. By this way  that objects of a superclass can be replaced with objects of its subclasses without breaking the application, so it good to keep this in mind.
+In the CrashAssistant module, all the ViewModels are used as protocols within the classes to adhere to the principle of relying on interfaces rather than implementations, following the Liskov Substitution Principle (LSP). This allows objects of a superclass to be replaced with objects of its subclasses without breaking the application's functionality, promoting flexibility and modularity.
 
-The ViewModel structure needs to have a top level protocol that helds together all other parts. But only for one level. The ViewModel we looking for is the `CrashAssistCategoryViewModel`. That is the entry for all the viewModels. In the crashAssistantViewModelCreator, the getViewModel looks like this:
+At the top level of the ViewModel structure, there is the `CrashAssistCategoryViewModel`, which serves as the entry point for all the ViewModels. In the `CrashAssistantViewModelCreator`, the `getViewModel()` method constructs this ViewModel by obtaining the necessary sub-ViewModels, such as `injuryViewModel`, `otherDriverViewModel`, and `userViewModel`, and then returning the `CrashAssistCategoryViewModel` with these sub-ViewModels as its components. In the crashAssistantViewModelCreator, the getViewModel looks like this:
 
 ```swift
 public class CrashAssistantViewModelCreator {
     func getViewModel() -> CrashAssistCategoryViewModel {
-        
+
         let injuryViewModel = getInjuryViewModel()
         let otherDriverViewModel = getOtherDriverViewModel()
         let userViewModel = getUserViewModel()
-        
+
         return CrashAssistCategoryViewModel(viewModels: [
             injuryViewModel,
             otherDriverViewModel,
@@ -819,20 +819,71 @@ public class CrashAssistantViewModelCreator {
 }
 ```
 
-The categories protocol hierarchy is the follows:
+The ViewModel hierarchy for the categories is as follows:
 
 ```swift
-CrashAssistInjuryViewModel -> CrashAssistantViewModelProtocol
-CrashAssistOtherDriverInfoViewModel -> CrashAssistantTableViewModelProtocol -> CrashAssistantViewModelProtocol  
-CrashAssistantUserViewModel -> CrashAssistantTableViewModelProtocol -> CrashAssistantViewModelProtocol
+CrashAssistInjuryViewModel implements CrashAssistantViewModelProtocol.
+CrashAssistOtherDriverInfoViewModel implements CrashAssistantTableViewModelProtocol, which in turn implements CrashAssistantViewModelProtocol.
+CrashAssistantUserViewModel implements CrashAssistantTableViewModelProtocol, which also implements CrashAssistantViewModelProtocol.
 ```
 
-Which means that the `CrashAssistCategoryViewModel` has an array of `CrashAssistantViewModelProtocol`, because that is most low level of the view Model protocols. 
+Therefore, the `CrashAssistCategoryViewModel` has an array of `CrashAssistantViewModelProtocol` objects since it represents the lowest level of the ViewModel protocols.
 
-There are viewModels which serves different purposes. 
+The different ViewModel types serve specific purposes:
+
+- `CrashAssistCategoryViewModel` contains all the information needed for the Crash Assistant functionality.
+- `CrashAssistantViewModel` acts as the base for modal view controller ViewModels, defining the cells displayed on the Crash Assistant landing page and facilitating the presentation of data.
+- `CrashAssistantTableViewModel` is a specialized version of `CrashAssistantViewModel` specifically tailored for table views.
+- `CrashAssistantSectionViewModel` stores information about a section within modal view controllers.
+- `CrashAssistantCellViewModel` encapsulates the data required to present a specific cell and includes information about the cell type.
+
+By structuring the ViewModels in this way, the CrashAssistant module achieves organization, separation of concerns, and flexibility in managing the data and functionality displayed in different parts of the application.
 
 ### Datas
 
+In the CrashAssistant application, the data is managed by the ViewModels. It's important to note a few interesting points about the data handling.
+
+Firstly, all of the data is represented using structs. When updating the ViewModel with new data, it's crucial to ensure that the struct objects are updated correctly. For example, when removing all image data from the "Your info" screen, the `deleteAllData()` function can be used:
+
+```swift
+func deleteAllData() {
+    (...)
+    var userData = crashAssistantData as? CrashAssistantUserData
+    userData?.vehicleImages?.removeAll()
+    userData?.crashSceneImages?.removeAll()
+    crashAssistantData = userData
+}
+```
+
+The data structure is built on the `Codable` protocol. This enables easy translation of the data into a format like JSON that can be sent to and received from a server. Helper methods for encoding and decoding the data can be found in the extensions `Decodable+Extensions.swift` and `Codable+Extensions.swift`, located in the `Extensions` directory of the project. These extensions provide additional functionality for working with Codable objects.
+
+The usage of these functionalities can be observed in the `NetworkingManager.swift` file, which handles networking tasks such as sending and receiving data to and from the server. The Codable extensions facilitate the encoding and decoding of data to ensure seamless communication between the application and the server.
+
+By utilizing the Codable protocol and the provided extensions, the CrashAssistant application achieves efficient data management, easy serialization, and interoperability with external systems.
+
 ### Protocols
 
+The application built upon protocols, so all of the funtionallity can be used as an interface, instead of the actual implementation. In this way the system can became more cleaner, testable and reusable and it serves the dependency injection as well. 
+
 ### Delegates
+
+Delegating functions plays a crucial role in facilitating communication between different objects within the crash assistant. Let's explore an example that illustrates how delegates are utilized in a one-level communication scenario.
+
+Consider a view controller named `ParentVC`, which includes a custom UIView called `CustomView`. This `CustomView` is added as a subview to the `ParentVC`'s main view. Within the `CustomView`, there is a UITableView component, and this table view contains multiple instances of a custom cell called `CustomCell`.
+
+Here is a clearer representation of the hierarchy:
+
+```swift
+// Here's a more readble hiearchy of the example:
+- ParentVC
+    - CustomView
+        - UITableView
+            - CustomCell_0
+            - CustomCell_1
+            - (...)
+            - CustomCell_N
+```
+
+Now, suppose there is a requirement to present a `CustomModalVC` when any of the `CustomCell` instances is selected. As the CustomCell is a property of the UITableView, we can utilize the data source method `didSelectForRow` to handle the selection event. This means that the UITableView needs to notify the `CustomView` that one of its cells has been selected. Once the delegate is triggered, the `CustomView` processes the information and forwards it to the `ParentVC`. The `ParentVC` is responsible for managing the necessary steps to present the `CustomModalVC` since it possesses the ability and responsibility to handle view controller presentation. None of the underlying UIViews should be burdened with this responsibility.
+
+By utilizing this delegation pattern, the crash assistant ensures that the appropriate objects handle their designated tasks, promoting separation of concerns and maintaining a clear and organized code structure.
